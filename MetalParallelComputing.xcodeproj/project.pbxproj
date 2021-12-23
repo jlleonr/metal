@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D1C0A5B32774EC4F001C4ABE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1C0A5B22774EC4F001C4ABE /* main.swift */; };
+		D1C0A5BA2774EE41001C4ABE /* compute.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1C0A5B92774EE41001C4ABE /* compute.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,7 @@
 /* Begin PBXFileReference section */
 		D1C0A5AF2774EC4F001C4ABE /* MetalParallelComputing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MetalParallelComputing; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1C0A5B22774EC4F001C4ABE /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		D1C0A5B92774EE41001C4ABE /* compute.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = compute.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				D1C0A5B22774EC4F001C4ABE /* main.swift */,
+				D1C0A5B92774EE41001C4ABE /* compute.metal */,
 			);
 			path = MetalParallelComputing;
 			sourceTree = "<group>";
@@ -121,6 +124,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1C0A5B32774EC4F001C4ABE /* main.swift in Sources */,
+				D1C0A5BA2774EE41001C4ABE /* compute.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -248,6 +252,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8S3HPZVR2Q;
 				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -259,6 +264,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8S3HPZVR2Q;
 				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
