@@ -8,9 +8,13 @@
 import MetalKit
 import MetalPerformanceShaders
 
-let count: Int = 3000000
 //let count: Int = 90000000
+let count: Int = 3000000
 
+//Reference to the GPU we want to use
+guard let device = MTLCreateSystemDefaultDevice() else {
+    fatalError("Error accessing the system's GPU.")
+}
 
 func computeWay(arr1: [Float], arr2: [Float]) {
     
@@ -19,65 +23,60 @@ func computeWay(arr1: [Float], arr2: [Float]) {
     
     // Begin the process
     let startTime = CFAbsoluteTimeGetCurrent()
-    
-    // The GPU we want to use
-    let device = MTLCreateSystemDefaultDevice()
 
-    // A fifo queue for sending commands to the gpu
-    let commandQueue = device?.makeCommandQueue()
-
-    // A library for getting our metal functions
-    let gpuFunctionLibrary = device?.makeDefaultLibrary()
-
-    // Grab our gpu function
-    let additionGPUFunction = gpuFunctionLibrary?.makeFunction(name: "addition_compute_function")
+    guard //A FIFO queue for sending commands to the GPU
+          let commandQueue = device.makeCommandQueue(),
+          //Create a command buffer to be sent to the command queue
+          let commandBuffer = commandQueue.makeCommandBuffer(),
+          // Create an encoder to set vaulues on the compute function
+          let commandEncoder = commandBuffer.makeComputeCommandEncoder(),
+          //Grab our GPU shader function
+          let gpuFuncitonLibrary = device.makeDefaultLibrary(),
+          let additionGPUFunction = gpuFuncitonLibrary.makeFunction(name: "addition_compute_function") else {
+              fatalError("Error unwrapping optionals in funciton computeWay")
+          }
 
     var additionComputePipelineState: MTLComputePipelineState!
     do {
-        additionComputePipelineState = try device?.makeComputePipelineState(function: additionGPUFunction!)
+        additionComputePipelineState = try device.makeComputePipelineState(function: additionGPUFunction)
     } catch {
       print(error)
     }
 
     // Create the buffers to be sent to the gpu from our arrays
-    let arr1Buff = device?.makeBuffer(bytes: arr1,
+    let arr1Buff = device.makeBuffer(bytes: arr1,
                                       length: MemoryLayout<Float>.size * count,
                                       options: .storageModeShared)
 
-    let arr2Buff = device?.makeBuffer(bytes: arr2,
+    let arr2Buff = device.makeBuffer(bytes: arr2,
                                       length: MemoryLayout<Float>.size * count,
                                       options: .storageModeShared)
 
-    let resultBuff = device?.makeBuffer(length: MemoryLayout<Float>.size * count,
+    let resultBuff = device.makeBuffer(length: MemoryLayout<Float>.size * count,
                                         options: .storageModeShared)
 
-    // Create a buffer to be sent to the command queue
-    let commandBuffer = commandQueue?.makeCommandBuffer()
-
-    // Create an encoder to set vaulues on the compute function
-    let commandEncoder = commandBuffer?.makeComputeCommandEncoder()
-    commandEncoder?.setComputePipelineState(additionComputePipelineState)
+    commandEncoder.setComputePipelineState(additionComputePipelineState)
 
     // Set the parameters of our gpu function
-    commandEncoder?.setBuffer(arr1Buff, offset: 0, index: 0)
-    commandEncoder?.setBuffer(arr2Buff, offset: 0, index: 1)
-    commandEncoder?.setBuffer(resultBuff, offset: 0, index: 2)
+    commandEncoder.setBuffer(arr1Buff, offset: 0, index: 0)
+    commandEncoder.setBuffer(arr2Buff, offset: 0, index: 1)
+    commandEncoder.setBuffer(resultBuff, offset: 0, index: 2)
 
     // Figure out how many threads we need to use for our operation
     let threadsPerGrid = MTLSize(width: count, height: 1, depth: 1)
     let maxThreadsPerThreadgroup = additionComputePipelineState.maxTotalThreadsPerThreadgroup // 1024
     let threadsPerThreadgroup = MTLSize(width: maxThreadsPerThreadgroup, height: 1, depth: 1)
-    commandEncoder?.dispatchThreads(threadsPerGrid,
+    commandEncoder.dispatchThreads(threadsPerGrid,
                                     threadsPerThreadgroup: threadsPerThreadgroup)
 
     // Tell the encoder that it is done encoding.  Now we can send this off to the gpu.
-    commandEncoder?.endEncoding()
+    commandEncoder.endEncoding()
 
     // Push this command to the command queue for processing
-    commandBuffer?.commit()
+    commandBuffer.commit()
 
     // Wait until the gpu function completes before working with any of the data
-    commandBuffer?.waitUntilCompleted()
+    commandBuffer.waitUntilCompleted()
 
     // Get the pointer to the beginning of our data
     var resultBufferPointer = resultBuff?.contents().bindMemory(to: Float.self,
@@ -155,15 +154,13 @@ func mpsWay(arr1: [Float], arr2: [Float]){
     print("MPS way")
     
     let startTime = CFAbsoluteTimeGetCurrent()
-
-    // The GPU we want to use
-    let device = MTLCreateSystemDefaultDevice()!
-
-    // A queue for sending buffers with commands to the GPU
-    let commandQueue = device.makeCommandQueue()!
-    
-    //A buffer to send commands to the GPU
-    let commandBuffer = commandQueue.makeCommandBuffer()!
+              
+    guard // A queue for sending buffers with commands to the GPU
+          let commandQueue = device.makeCommandQueue(),
+          //A buffer to send commands to the GPU
+          let commandBuffer = commandQueue.makeCommandBuffer() else {
+              fatalError("Error unwrapping optionals in function mpsWay!")
+          }
     
     //A MPS that calls a kernel to sum two matrices
     let matrixSumKermel = MPSMatrixSum(device: device,
@@ -172,29 +169,33 @@ func mpsWay(arr1: [Float], arr2: [Float]){
                                        columns: count,
                                        transpose: false)
     
-    //Buffer A has matrix 1 values
+    //Buffer A with matrix 1 values
     let bufferA = device.makeBuffer(bytes: arr1,
                                     length: MemoryLayout<Float>.stride * arr1.count,
                                     options: .storageModeShared)
     
+    //Create matrix 1 descriptor
     let matrixADescA = MPSMatrixDescriptor(rows: 1,
                                           columns: count,
                                           rowBytes: MemoryLayout<Float>.stride * count,
                                           dataType: .float32)
     
+    //Convert bufferA to MPSMatrix type
     let mpsMatrixA = MPSMatrix(buffer: bufferA!,
                                descriptor: matrixADescA)
     
-    //Buffer B has matrix 2 values
+    //Buffer B with matrix 2 values
     let bufferB = device.makeBuffer(bytes: arr2,
                                     length: MemoryLayout<Float>.stride * arr2.count,
                                     options: .storageModeShared)
     
+    //Create matrix 2 descriptor
     let matrixDescB = MPSMatrixDescriptor(rows: 1,
                                           columns: count,
                                           rowBytes: MemoryLayout<Float>.stride * count,
                                           dataType: .float32)
     
+    //Convert bufferB to MPSMatrix
     let mpsMatrixB = MPSMatrix(buffer: bufferB!,
                                descriptor: matrixDescB)
     
@@ -219,6 +220,7 @@ func mpsWay(arr1: [Float], arr2: [Float]){
     
     commandBuffer.commit()
     commandBuffer.waitUntilCompleted()
+    
 /*
     var output = [Float]()
     
