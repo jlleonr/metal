@@ -45,14 +45,14 @@ func computeWay(arr1: [Float], arr2: [Float]) {
 
     // Create the buffers to be sent to the gpu from our arrays
     let arr1Buff = device.makeBuffer(bytes: arr1,
-                                      length: MemoryLayout<Float>.size * count,
+                                      length: MemoryLayout<Float>.stride * count,
                                       options: .storageModeShared)
 
     let arr2Buff = device.makeBuffer(bytes: arr2,
-                                      length: MemoryLayout<Float>.size * count,
+                                      length: MemoryLayout<Float>.stride * count,
                                       options: .storageModeShared)
 
-    let resultBuff = device.makeBuffer(length: MemoryLayout<Float>.size * count,
+    let resultBuff = device.makeBuffer(length: MemoryLayout<Float>.stride * count,
                                         options: .storageModeShared)
 
     commandEncoder.setComputePipelineState(additionComputePipelineState)
@@ -80,7 +80,7 @@ func computeWay(arr1: [Float], arr2: [Float]) {
 
     // Get the pointer to the beginning of our data
     var resultBufferPointer = resultBuff?.contents().bindMemory(to: Float.self,
-                                                                capacity: MemoryLayout<Float>.size * count)
+                                                                capacity: MemoryLayout<Float>.stride * count)
 
     // Print out all of our new added together array information
     for i in 0..<3 {
@@ -221,25 +221,10 @@ func mpsWay(arr1: [Float], arr2: [Float]){
     commandBuffer.commit()
     commandBuffer.waitUntilCompleted()
     
-/*
-    var output = [Float]()
-    
-    let rawPointer = resultMatrix.data.contents()
-    let typePointer = rawPointer.bindMemory(to: Float.self, capacity: count)
-    let bufferPointer = UnsafeBufferPointer(start: typePointer, count: count)
-    
-    bufferPointer.map { value in
-        output += [value]
-    }
-    
-    // Print out the results
-    for i in 0..<3 {
-        print("\(arr1[i]) + \(arr2[i]) = \(output[i])")
-    }
-*/
     // Get the pointer to the beginning of our data
-    var resultBufferPointer = bufferC!.contents().bindMemory(to: Float.self,
-                                                                capacity: MemoryLayout<Float>.size * count)
+    var resultBufferPointer = bufferC!.contents()
+                                      .bindMemory(to: Float.self,
+                                                  capacity: MemoryLayout<Float>.stride * count)
 
     // Print out all of our new added together array information
     for i in 0..<3 {
@@ -255,13 +240,18 @@ func mpsWay(arr1: [Float], arr2: [Float]){
 
 }
 
-
 // Helper function
 func getRandomArray()->[Float] {
+    
+    var lock = os_unfair_lock_s()
     var result = [Float].init(repeating: 0.0, count: count)
-    for i in 0..<count {
-        result[i] = Float(arc4random_uniform(10))
-    }
+    
+    DispatchQueue.concurrentPerform(iterations: count, execute: { index in
+        os_unfair_lock_lock(&lock)
+        result[index] = Float(arc4random_uniform(10))
+        os_unfair_lock_unlock(&lock)
+    })
+    
     return result
 }
 
