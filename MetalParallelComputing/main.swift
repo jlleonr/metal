@@ -17,7 +17,7 @@ guard let device = MTLCreateSystemDefaultDevice() else {
 }
 
 
-/// Compute array1 + array2 using the device's GPU
+/// Sum two matrices using the device's GPU
 /// - Parameters:
 ///   - arr1: Array with first set of parameters
 ///   - arr2: Array with second set of parameters
