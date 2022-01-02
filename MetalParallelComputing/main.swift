@@ -16,7 +16,12 @@ guard let device = MTLCreateSystemDefaultDevice() else {
     fatalError("Error accessing the system's GPU.")
 }
 
-func computeWay(arr1: [Float], arr2: [Float]) {
+
+/// Compute array1 + array2 using the device's GPU
+/// - Parameters:
+///   - arr1: Array with first set of parameters
+///   - arr2: Array with second set of parameters
+func matrixSumGPU(arr1: [Float], arr2: [Float]) {
     
     print()
     print("GPU Way")
@@ -94,7 +99,11 @@ func computeWay(arr1: [Float], arr2: [Float]) {
     print()
 }
 
-func basicForLoopWay(arr1: [Float], arr2: [Float]) {
+/// Sum two matrices serially using the CPU
+/// - Parameters:
+///   - arr1: Array with first set of parameters
+///   - arr2: Array with second set of parameters
+func matrixSumSerialForLoopWay(arr1: [Float], arr2: [Float]) {
     print("CPU Way")
     
     // Begin the process
@@ -119,7 +128,11 @@ func basicForLoopWay(arr1: [Float], arr2: [Float]) {
 }
 
 
-func parallelForLoopWay(arr1: [Float], arr2: [Float]) {
+/// Sum two matrices in parallel using all available CPU cores
+/// - Parameters:
+///   - arr1: Array with first set of parameters
+///   - arr2: Array with second set of parameters
+func matrixSumParallelForLoopWay(arr1: [Float], arr2: [Float]) {
     print("Parallel CPU Way")
     
     var lock = os_unfair_lock_s()
@@ -149,7 +162,11 @@ func parallelForLoopWay(arr1: [Float], arr2: [Float]) {
 }
 
 //Compute using Metal Performance Shaders
-func mpsWay(arr1: [Float], arr2: [Float]){
+/// Sum two matrices using the MPS kernel MPSMatrixSum
+/// - Parameters:
+///   - arr1: Array with first set of parameters
+///   - arr2: Array with second set of parameters
+func matrixSumMPSWay(arr1: [Float], arr2: [Float]){
     
     print("MPS way")
     
@@ -240,7 +257,8 @@ func mpsWay(arr1: [Float], arr2: [Float]){
 
 }
 
-// Helper function
+/// Helper function to populate the elements of the arrays
+/// - Returns: An array with random element values
 func getRandomArray()->[Float] {
     
     var lock = os_unfair_lock_s()
@@ -260,10 +278,9 @@ var array1 = getRandomArray()
 var array2 = getRandomArray()
 
 // Call our functions
+print()
 print("Using count = \(count)")
-computeWay(arr1: array1, arr2: array2)
-parallelForLoopWay(arr1: array1, arr2: array2)
-basicForLoopWay(arr1: array1, arr2: array2)
-mpsWay(arr1: array1, arr2: array2)
-
-
+matrixSumSerialForLoopWay(arr1: array1, arr2: array2)
+matrixSumParallelForLoopWay(arr1: array1, arr2: array2)
+matrixSumMPSWay(arr1: array1, arr2: array2)
+matrixSumGPU(arr1: array1, arr2: array2)
