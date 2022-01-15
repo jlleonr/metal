@@ -7,6 +7,16 @@ class MainView: MTKView {
     var commandQueue: MTLCommandQueue!
     var renderPipelineState: MTLRenderPipelineState!
     
+    struct Vertex {
+        var position: SIMD3<Float>
+        var color: SIMD4<Float>
+    }
+    
+    //Create vertices
+    var vertices: [Vertex]!
+    
+    var vertexBuffer: MTLBuffer!
+    
     required init(coder: NSCoder) {
         super.init(coder: coder)
         
@@ -17,6 +27,33 @@ class MainView: MTKView {
         self.commandQueue = device?.makeCommandQueue()
         
         createRenderPipelineState()
+        createVertexPoints()
+        createBuffers()
+        
+    }
+    
+    fileprivate func createVertexPoints(){
+        func rads(forDegree d: Float)->Float32{
+            return (Float.pi*d)/180
+        }
+        
+        for i in 0...720 {
+                let position : SIMD3<Float> = [cos(rads(forDegree: Float(Float(i)/2.0)))/2,
+                                               sin(rads(forDegree: Float(Float(i)/2.0)))/2,
+                                               0]
+            
+            vertices.append(Vertex(position: position, color: [0.5, 0.5, 0.5, 1]))
+            
+                if (i+1)%2 == 0 {
+                    vertices.append(Vertex(position: [0.5, 0.5, 0.5], color: [1, 1, 1, 1])) //Origin, center of the screen space coordinates
+                }
+            }
+    }
+    
+    func createBuffers(){
+        vertexBuffer = device?.makeBuffer(bytes: vertices,
+                                          length: MemoryLayout<Vertex>.stride * vertices.count,
+                                          options: .storageModeShared)
     }
     
     func createRenderPipelineState(){
@@ -48,7 +85,13 @@ class MainView: MTKView {
         let renderCommandEncoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
         renderCommandEncoder?.setRenderPipelineState(renderPipelineState)
         
-        //Todo --> Set properties of renderCommandEncoder
+        renderCommandEncoder?.setVertexBuffer(vertexBuffer,
+                                              offset: 0,
+                                              index: 0)
+        
+        renderCommandEncoder?.drawPrimitives(type: .triangleStrip,
+                                             vertexStart: 0,
+                                             vertexCount: vertices.count)
         
         renderCommandEncoder?.endEncoding()
         commandBuffer?.present(drawable)
