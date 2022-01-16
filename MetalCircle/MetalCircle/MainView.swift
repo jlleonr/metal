@@ -4,18 +4,18 @@ import Cocoa
 
 class MainView: MTKView {
     
-    var commandQueue: MTLCommandQueue!
-    var renderPipelineState: MTLRenderPipelineState!
+    private var commandQueue: MTLCommandQueue!
+    private var renderPipelineState: MTLRenderPipelineState!
     
-    struct Vertex {
+    private struct Vertex {
         var position: SIMD3<Float>
         var color: SIMD4<Float>
     }
     
-    //Create vertices
-    var vertices: [Vertex]!
+    //Vertices container
+    private var vertices: [Vertex] = [Vertex]()
     
-    var vertexBuffer: MTLBuffer!
+    private var vertexBuffer: MTLBuffer!
     
     required init(coder: NSCoder) {
         super.init(coder: coder)
@@ -32,30 +32,74 @@ class MainView: MTKView {
         
     }
     
+    
+    /// Create enough vertices to form a circle
     fileprivate func createVertexPoints(){
+        
+        var col: SIMD4<Float>
+        var origin_col: SIMD4<Float>
+        var x, y: Float
+        
         func rads(forDegree d: Float)->Float32{
             return (Float.pi*d)/180
         }
         
+        //Form many triangles with a common origin
+        // vertices = (n*360)/2
         for i in 0...720 {
-                let position : SIMD3<Float> = [cos(rads(forDegree: Float(Float(i)/2.0)))/2,
-                                               sin(rads(forDegree: Float(Float(i)/2.0)))/2,
-                                               0]
             
-            vertices.append(Vertex(position: position, color: [0.5, 0.5, 0.5, 1]))
+            x = cos(rads(forDegree: Float(Float(i)/2.0)))/2
+            y = sin(rads(forDegree: Float(Float(i)/2.0)))/2
+            
+            let pos : SIMD3<Float> = [x, y, 0]
+                        
+            if ( x >= 0 && y >= 0 ) {        //Paint quadrant I green
+                
+                col = [0, 1, 0, 1]
+                origin_col = [0, 1, 0, 1]
+                
+            } else if ( x >= 0 && y <= 0 ) { //Paint quadrant II red
+                
+                col = [1, 0, 0, 1]
+                origin_col = [1, 0, 0, 1]
+                
+            } else if ( x <= 0 && y <= 0 ) { //Paint quadrant III blue
+                
+                col = [0, 0, 1, 1]
+                origin_col = [0, 0, 1, 1]
+                
+            } else if ( x <= 0 && y >= 0 ) { //Paint quadrant IV yellow
+                
+                col = [1, 1, 0, 1]
+                origin_col = [1, 1, 0, 1]
+                
+            } else {
+                
+                col = [1, 1, 1, 1]
+                origin_col = [1, 1, 1, 1]
+                
+            }
+            
+            vertices.append(Vertex(position: pos, color: col))
             
                 if (i+1)%2 == 0 {
-                    vertices.append(Vertex(position: [0.5, 0.5, 0.5], color: [1, 1, 1, 1])) //Origin, center of the screen space coordinates
+                    
+                    //Origin, center of the screen space coordinates
+                    vertices.append(Vertex(position: [0, 0, 0], color: origin_col))
                 }
             }
     }
     
+    
+    /// Create a MTL buffer to store the vertices
     func createBuffers(){
         vertexBuffer = device?.makeBuffer(bytes: vertices,
                                           length: MemoryLayout<Vertex>.stride * vertices.count,
                                           options: .storageModeShared)
     }
     
+    
+    /// Configure and create the render pipeline state
     func createRenderPipelineState(){
         let library = device?.makeDefaultLibrary()
         let vertexFunction = library?.makeFunction(name: "vertex_function")
@@ -73,6 +117,7 @@ class MainView: MTKView {
         }
         
     }
+    
     
     override func draw(_ dirtyRect: NSRect) {
         
