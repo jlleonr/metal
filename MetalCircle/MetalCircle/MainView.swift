@@ -68,15 +68,10 @@ class MainView: MTKView {
                 col = [0, 0, 1, 1]
                 origin_col = [0, 0, 1, 1]
                 
-            } else if ( x <= 0 && y >= 0 ) { //Paint quadrant IV yellow
+            } else {                         //Paint quadrant IV yellow
                 
                 col = [1, 1, 0, 1]
                 origin_col = [1, 1, 0, 1]
-                
-            } else {
-                
-                col = [1, 1, 1, 1]
-                origin_col = [1, 1, 1, 1]
                 
             }
             
