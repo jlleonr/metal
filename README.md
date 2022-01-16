@@ -44,3 +44,6 @@ built-in functions to measure the execution time of the encoded command within t
 
 ## [MetalCircle](https://github.com/jlleonr/metal/tree/main/MetalCircle)
 In this project I explore Metal's render pipeline to draw primitives. A circle is created by providing enough vertex points with a common origin. Basically, enough triangles pointing to the center are passed to the vertex shader so that a circle is rendered to the screen.
+I colored each quadrant in a different color when working with the rasterizer data.
+
+![MTL Circle](https://github.com/jlleonr/metal/blob/main/Resources/MTL_Circle.png)
